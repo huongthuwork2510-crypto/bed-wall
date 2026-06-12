@@ -3,24 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sơ đồ Giường Bệnh – Khoa Nội Tiêu Hóa</title>
+<title>Sơ đồ giường bệnh</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy:      #024593;
-    --red:       #ea232b;
-    --red-bg:    #ffefec;
-    --orange:    #e8820c;
-    --orange-bg: #fff4e0;
-    --green:     #2e8b57;
-    --green-bg:  #e5ffec;
-    --gray:      #d9d9d9;
-    --gray-bg:   #f5f5f5;
-    --text:      #1f2937;
-    --text-soft: #6b7280;
-    --border:    #e5e7eb;
-    --white:     #ffffff;
-    --page-bg:   #f0f2f5;
+    --navy:          #024593;
+    --red:           #ea232b;
+    --red-bg:        #ffefec;
+    --orange:        #e8820c;
+    --orange-bg:     #fff4e0;
+    --green:         #2e8b57;
+    --green-bg:      #e5ffec;
+    --gray:          #d9d9d9;
+    --gray-bg:       #f5f5f5;
+    --text:          #1f2937;
+    --text-soft:     #6b7280;
+    --text-mute:     #9ca3af;
+    --border:        #e5e7eb;
+    --border-strong: #d8dde5;
+    --white:         #ffffff;
+    --page-bg:       #f0f2f5;
+    --canvas:        #f4f6f9;
+    --radius:        8px;
+    --shadow:        0 1px 2px rgba(16,24,40,.05);
+    --shadow-hover:  0 4px 14px rgba(16,24,40,.10);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -43,8 +49,9 @@
     padding: 10px 20px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 12px 20px;
     box-shadow: 0 1px 4px rgba(0,0,0,.06);
   }
 
@@ -61,6 +68,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .toolbar-right {
@@ -99,20 +108,18 @@
     color: var(--white);
   }
 
-  /* Density toggle */
-  .density-group { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-soft); }
-  .density-group label { cursor: pointer; padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border); }
-  .density-group input[type=radio] { display: none; }
-  .density-group input[type=radio]:checked + label { background: var(--navy); color: #fff; border-color: var(--navy); }
+  /* Control group + divider */
+  .ctrl-group { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-soft); }
+  .ctrl-label { font-size: 12px; color: var(--text-soft); white-space: nowrap; }
+  .toolbar-divider { width: 1px; align-self: stretch; min-height: 22px; background: var(--border); }
 
-  /* Info level toggle */
-  .info-group { display: flex; align-items: center; gap: 6px; font-size: 12px; }
-  .info-group select {
+  /* Select control */
+  .ctrl-group select {
     font-family: inherit;
     font-size: 12px;
-    padding: 4px 8px;
+    padding: 5px 8px;
     border: 1px solid var(--border);
-    border-radius: 5px;
+    border-radius: 6px;
     color: var(--text);
     background: var(--white);
     cursor: pointer;
@@ -190,373 +197,240 @@
   }
 
   .cluster-header {
-    padding: 8px 12px;
-    font-size: 12px;
-    font-weight: 600;
+    padding: 9px 12px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    background: #fafafa;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(0deg, #fafafa, #fff);
     border-bottom: 1px solid var(--border);
   }
 
-  .cluster-header-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .cluster-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    letter-spacing: .01em;
   }
 
-  .cluster-accent {
-    width: 4px;
-    height: 16px;
-    border-radius: 2px;
-  }
-
-  .cluster-count {
-    font-size: 11px;
-    color: var(--text-soft);
-    font-weight: 400;
+  .cluster-dot {
+    width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
   }
 
   .cluster-beds {
-    padding: 6px;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  /* In severity mode, beds flow into a responsive grid */
+  .mode-severity .cluster-beds {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  }
+
+  /* ── BED TILE (landscape, kiểu v2) ── */
+  .bed-tile {
+    position: relative;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--white);
+    overflow: hidden;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    padding: 9px 12px 9px 15px;
     gap: 5px;
-  }
-
-  /* In severity mode, beds go in a responsive grid */
-  .mode-severity .cluster-beds {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 6px;
-  }
-
-  /* ── BED TILE ── */
-  .bed-tile {
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    display: flex;
-    overflow: hidden;
+    min-height: 58px;
     cursor: pointer;
-    transition: transform .15s, box-shadow .15s, border-color .15s;
-    background: var(--white);
-    position: relative;
+    transition: box-shadow .12s, transform .08s, border-color .12s;
   }
+
+  .bed-tile::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+  }
+  .bed-tile.sev-red::before    { background: var(--red); }
+  .bed-tile.sev-orange::before { background: var(--orange); }
+  .bed-tile.sev-green::before  { background: var(--green); }
+  .bed-tile.sev-empty::before  { background: var(--gray); }
+
+  /* critical / warning glow */
+  .bed-tile.sev-red    { background: linear-gradient(90deg, var(--red-bg), var(--white) 42%); }
+  .bed-tile.sev-orange { background: linear-gradient(90deg, var(--orange-bg), var(--white) 46%); }
 
   .bed-tile:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 14px rgba(0,0,0,.10);
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
     border-color: var(--navy);
   }
 
-  /* Severity stripe */
-  .bed-stripe {
-    width: 5px;
-    flex-shrink: 0;
+  .bed-line1 { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .bed-line2 { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+  .bed-no {
+    font-size: 10.5px; font-weight: 700; color: var(--text-soft);
+    letter-spacing: .02em; flex-shrink: 0; font-variant-numeric: tabular-nums;
   }
-
-  .bed-tile.sev-red    .bed-stripe { background: var(--red); }
-  .bed-tile.sev-orange .bed-stripe { background: var(--orange); }
-  .bed-tile.sev-green  .bed-stripe { background: var(--green); }
-  .bed-tile.sev-empty  .bed-stripe { background: var(--gray); }
-
-  /* Gradient tint for critical/warning */
-  .bed-tile.sev-red    { background: linear-gradient(90deg, var(--red-bg) 0%, var(--white) 50%); }
-  .bed-tile.sev-orange { background: linear-gradient(90deg, var(--orange-bg) 0%, var(--white) 50%); }
-
-  /* Empty bed pattern */
-  .bed-tile.sev-empty {
-    background: repeating-linear-gradient(
-      -45deg,
-      #f8f8f8,
-      #f8f8f8 4px,
-      var(--white) 4px,
-      var(--white) 12px
-    );
-  }
-
-  .bed-body {
-    padding: 7px 10px;
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  /* Compact density */
-  body.density-compact .bed-body { padding: 5px 8px; gap: 2px; }
-  body.density-compact .bed-tile { border-radius: 5px; }
-
-  /* Roomy density */
-  body.density-roomy .bed-body { padding: 9px 12px; gap: 5px; }
-
-  /* Row 1: bed id + name */
-  .bed-row1 {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    justify-content: space-between;
-  }
-
-  .bed-id {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--navy);
-    background: #eef3fb;
-    padding: 1px 6px;
-    border-radius: 3px;
-    flex-shrink: 0;
-    letter-spacing: .3px;
-  }
-
   .bed-name {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex: 1;
+    font-size: 13.5px; font-weight: 700; color: var(--text); line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-
-  /* Row 2: age/sex/diagnosis + badges */
-  .bed-row2 {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    justify-content: space-between;
+  .bed-meta { font-size: 10.5px; color: var(--text-mute); white-space: nowrap; flex-shrink: 0; }
+  .bed-dx {
+    font-size: 11px; color: var(--text); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;
   }
+  .bed-badges { display: flex; align-items: center; gap: 5px; flex-shrink: 0; margin-left: auto; }
 
-  .bed-info {
-    font-size: 11.5px;
-    color: var(--text-soft);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex: 1;
-    min-width: 0;
+  .wbadge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10px; font-weight: 700; padding: 1px 7px 1px 6px; border-radius: 20px;
+    font-variant-numeric: tabular-nums; line-height: 1.6;
   }
+  .wbadge.orders   { background: #fef3c7; color: #b07400; }
+  .wbadge.unsigned { background: var(--red-bg); color: var(--red); }
+  .wbadge.labs     { background: #eef4ff; color: #2a4d8f; }
+  .wbadge.clean    { background: #f3f4f6; color: #9ca3af; }
 
-  .badge-group {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-  }
-
-  .badge {
-    font-size: 10.5px;
-    font-weight: 700;
-    padding: 1px 6px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    white-space: nowrap;
-  }
-
-  .badge-order   { background: #fef3c7; color: #92400e; }
-  .badge-doc     { background: #fee2e2; color: #991b1b; }
-  .badge-lab     { background: #dbeafe; color: #1e40af; }
-  .badge-clear   { background: #f3f4f6; color: #9ca3af; }
-
-  /* Row 3: doctor/nurse (optional) */
-  .bed-row3 {
-    font-size: 11px;
-    color: #9ca3af;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  /* staff line (doctor / nurse) — gated by info level */
+  .bed-staff {
     display: none;
+    align-items: center; flex-wrap: wrap; gap: 4px 14px;
+    padding-top: 5px; margin-top: 1px;
+    border-top: 1px dashed #eef0f3;
+  }
+  body.info-doctor .bed-staff,
+  body.info-nurse  .bed-staff { display: flex; }
+
+  .bed-person {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; font-weight: 600; color: var(--text-soft); white-space: nowrap;
+  }
+  .bed-person svg { color: var(--text-mute); flex-shrink: 0; }
+  .bed-person.nurse { display: none; }
+  .bed-person.nurse svg { color: var(--orange); }
+  body.info-nurse .bed-person.nurse { display: inline-flex; }
+
+  /* empty tile */
+  .bed-tile.sev-empty {
+    background: repeating-linear-gradient(135deg, #fafafa, #fafafa 7px, #f4f4f4 7px, #f4f4f4 14px);
+    flex-direction: row; align-items: center; gap: 8px;
+  }
+  .bed-empty-text {
+    font-size: 11px; font-weight: 700; color: var(--text-mute);
+    display: inline-flex; align-items: center; gap: 5px;
   }
 
-  body.info-doctor   .bed-row3 { display: block; }
-  body.info-nurse    .bed-row3 { display: block; }
-
-  /* Empty tile */
-  .bed-empty-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #b0b8c4;
-    font-size: 12px;
-    font-weight: 500;
-    padding: 6px 0;
-  }
-
-  /* ── DRAWER ── */
+  /* ── DRAWER (kiểu v2) ── */
   .drawer-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.35);
-    z-index: 200;
+    position: fixed; inset: 0; background: rgba(0,0,0,.35);
+    z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s;
   }
-
-  .drawer-overlay.open { display: block; }
+  .drawer-overlay.open { opacity: 1; pointer-events: auto; }
 
   .drawer {
-    position: fixed;
-    top: 0; right: 0; bottom: 0;
-    width: 380px;
-    background: var(--white);
-    box-shadow: -4px 0 24px rgba(0,0,0,.12);
-    z-index: 201;
-    transform: translateX(100%);
-    transition: transform .25s cubic-bezier(.4,0,.2,1);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+    position: fixed; top: 0; right: 0; bottom: 0; width: 480px; max-width: 92vw;
+    background: var(--canvas); z-index: 201; box-shadow: -4px 0 24px rgba(0,0,0,.18);
+    transform: translateX(100%); transition: transform .25s cubic-bezier(.4,0,.2,1);
+    display: flex; flex-direction: column;
   }
-
   .drawer.open { transform: translateX(0); }
 
-  .drawer-header {
-    padding: 16px 18px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    background: var(--white);
-    z-index: 1;
+  .drawer-head {
+    background: var(--white); padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
   }
-
-  .drawer-header h2 { font-size: 15px; font-weight: 700; color: var(--navy); }
+  .dh-name { font-size: 18px; font-weight: 700; margin: 0; color: var(--text); }
+  .dh-meta { font-size: 12px; color: var(--text-mute); margin-top: 3px; }
 
   .drawer-close {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    color: var(--text-soft);
-    padding: 4px;
-    line-height: 1;
-    border-radius: 4px;
+    background: none; border: none; cursor: pointer; color: var(--text-soft);
+    padding: 4px; border-radius: 4px; font-size: 20px; line-height: 1; flex-shrink: 0;
   }
+  .drawer-close:hover { background: #f3f4f6; }
 
-  .drawer-close:hover { background: var(--gray-bg); }
+  .drawer-body { padding: 16px 20px 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
 
-  .drawer-body { padding: 16px 18px; flex: 1; }
-
-  .drawer-section { margin-bottom: 18px; }
-
-  .drawer-section-title {
-    font-size: 10.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .8px;
-    color: var(--text-soft);
-    margin-bottom: 8px;
+  .drawer-banner {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    border-radius: var(--radius); font-size: 13px; font-weight: 600;
   }
+  .drawer-banner.red    { background: var(--red-bg);    color: var(--red); }
+  .drawer-banner.orange { background: var(--orange-bg); color: #c2620a; }
+  .drawer-banner.green  { background: var(--green-bg);  color: var(--green); }
 
-  .drawer-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 6px;
-    font-size: 13px;
+  .d-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .d-card h4 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .03em;
+    color: var(--text-mute); margin: 0; padding: 11px 14px 0; font-weight: 700;
   }
+  .d-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; padding: 10px 14px 12px; }
+  .d-item { padding: 5px 0; }
+  .di-label { font-size: 11px; color: var(--text-mute); }
+  .di-value { font-size: 13.5px; font-weight: 600; color: var(--text); }
+  .d-dx { padding: 6px 14px 14px; font-size: 15px; font-weight: 600; color: var(--text); }
 
-  .drawer-label { color: var(--text-soft); min-width: 110px; flex-shrink: 0; }
-  .drawer-val   { color: var(--text); font-weight: 500; flex: 1; }
+  .d-vitals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px 14px 14px; }
+  .d-vital { text-align: center; border: 1px solid #eef0f3; border-radius: 6px; padding: 8px 4px; }
+  .d-vital .v-label { font-size: 10px; color: var(--text-mute); text-transform: uppercase; }
+  .d-vital .v-value { font-size: 18px; font-weight: 700; color: var(--text); }
+  .d-vital .v-unit  { font-size: 10px; color: var(--text-mute); }
+  .d-vital.v-abn  { background: var(--red-bg);    border-color: #f3c0c6; }
+  .d-vital.v-abn  .v-value { color: var(--red); }
+  .d-vital.v-warn { background: var(--orange-bg); border-color: #f6d7ae; }
+  .d-vital.v-warn .v-value { color: #c2620a; }
 
-  .vitals-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
+  .d-list { padding: 6px 14px 12px; display: flex; flex-direction: column; gap: 7px; }
+  .d-order { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; padding: 7px 10px; border-radius: 6px; background: #f4f6f9; }
+  .o-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .o-text { flex: 1; color: var(--text); line-height: 1.35; }
+  .o-time { font-size: 11px; color: var(--text-mute); margin-top: 2px; }
+  .o-tag { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; }
+  .o-tag.tag-pending { background: var(--orange-bg); color: #b07400; }
+  .o-tag.tag-done    { background: var(--green-bg); color: var(--green); }
 
-  .vital-box {
-    background: var(--gray-bg);
-    border-radius: 6px;
-    padding: 8px 10px;
-    text-align: center;
-  }
-
-  .vital-label { font-size: 10px; color: var(--text-soft); margin-bottom: 3px; }
-  .vital-val   { font-size: 16px; font-weight: 700; color: var(--text); }
-  .vital-unit  { font-size: 10px; color: var(--text-soft); }
-
-  .vital-box.alert-red    .vital-val { color: var(--red); }
-  .vital-box.alert-orange .vital-val { color: var(--orange); }
-
-  .sev-badge-large {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 13px;
-    margin-bottom: 4px;
-  }
-
-  .sev-badge-large.red    { background: var(--red-bg);    color: var(--red); }
-  .sev-badge-large.orange { background: var(--orange-bg); color: var(--orange); }
-  .sev-badge-large.green  { background: var(--green-bg);  color: var(--green); }
+  .drawer-empty { color: var(--text-mute); text-align: center; padding: 48px 0; font-size: 13px; }
 </style>
 </head>
-<body class="density-compact info-basic">
+<body class="info-basic">
 
 <!-- TOOLBAR -->
 <div class="toolbar">
-  <div class="toolbar-left">
-    <div class="toolbar-title">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#024593" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-      </svg>
-      Sơ đồ Giường Bệnh – Khoa Nội Tiêu Hóa
+  <div class="toolbar-title">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#024593" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+    </svg>
+    Sơ đồ giường bệnh
+  </div>
+
+  <div class="toolbar-divider"></div>
+
+  <div class="ctrl-group">
+    <span class="ctrl-label">Nhóm theo</span>
+    <div class="seg-group">
+      <input type="radio" name="groupMode" id="g-room" value="room" checked>
+      <label for="g-room">Phòng</label>
+      <input type="radio" name="groupMode" id="g-sev" value="severity">
+      <label for="g-sev">Mức độ</label>
     </div>
   </div>
 
-  <div class="toolbar-right">
-    <!-- Group mode -->
-    <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-soft)">
-      <span>Nhóm theo</span>
-      <div class="seg-group">
-        <input type="radio" name="groupMode" id="g-room" value="room" checked>
-        <label for="g-room">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-          Phòng
-        </label>
-        <input type="radio" name="groupMode" id="g-sev" value="severity">
-        <label for="g-sev">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Mức độ
-        </label>
-      </div>
-    </div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Thông tin</span>
+    <select id="infoLevel">
+      <option value="basic">Tuổi, giới tính</option>
+      <option value="doctor">Bác sĩ</option>
+      <option value="nurse">Bác sĩ, điều dưỡng</option>
+    </select>
+  </div>
 
-    <!-- Density -->
-    <div class="density-group">
-      <span>Mật độ</span>
-      <input type="radio" name="density" id="d-compact" value="compact" checked>
-      <label for="d-compact">Gọn</label>
-      <input type="radio" name="density" id="d-roomy" value="roomy">
-      <label for="d-roomy">Thoáng</label>
-    </div>
-
-    <!-- Info level -->
-    <div class="info-group">
-      <span style="font-size:12px;color:var(--text-soft)">Thông tin</span>
-      <select id="infoLevel">
-        <option value="basic">Tuổi · Giới</option>
-        <option value="doctor">+ Bác sĩ</option>
-        <option value="nurse">+ Bác sĩ & Điều dưỡng</option>
-      </select>
-    </div>
-
-    <!-- Legend -->
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Cấp cứu</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div> Cảnh báo</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Bình thường</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--gray)"></div> Trống</div>
-    </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Cấp cứu</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div> Cảnh báo</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Bình thường</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gray)"></div> Trống</div>
   </div>
 </div>
 
@@ -568,16 +442,24 @@
 
 <!-- DRAWER -->
 <div class="drawer-overlay" id="drawerOverlay"></div>
-<div class="drawer" id="drawer">
-  <div class="drawer-header">
-    <h2 id="drawerTitle">Chi tiết giường</h2>
-    <button class="drawer-close" id="drawerClose">✕</button>
-  </div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head" id="drawerHead"></div>
   <div class="drawer-body" id="drawerBody"></div>
-</div>
+</aside>
 
 <script>
 const DATA = [{"bed_id":"G201A","room_name":"Phòng 201","room_no":"201","floor":"2","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Dạ dày - Thực quản","occupied":"true","patient_id":"BN1001","mrn":"BA240001","patient_name":"Đặng Thị M","dob":"01/01/1001","age":"32","sex":"Nam","diagnosis":"Tắc ruột do u đại tràng","doctor":"BS. Đặng Thu G","nurse":"ĐD. Phạm Thị Q","admit_date":"2025-05-20","los_days":"21","severity":"red","severity_label":"Cấp cứu","hr":"46","temp":"34.9","spo2":"89","bp_sys":"83","bp_dia":"61","pending_orders":"3","new_orders_today":"0","unsigned_docs":"1","abnormal_labs":"2"},{"bed_id":"G201B","room_name":"Phòng 201","room_no":"201","floor":"2","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Dạ dày - Thực quản","occupied":"true","patient_id":"BN1002","mrn":"BA240002","patient_name":"Trần Văn E","dob":"01/01/1001","age":"68","sex":"Nam","diagnosis":"Tắc mật do u đầu tụy","doctor":"BS. Lê Thị C","nurse":"ĐD. Đỗ Thị T","admit_date":"2025-05-28","los_days":"13","severity":"red","severity_label":"Cấp cứu","hr":"47","temp":"40.5","spo2":"89","bp_sys":"73","bp_dia":"60","pending_orders":"2","new_orders_today":"0","unsigned_docs":"2","abnormal_labs":"3"},{"bed_id":"G201C","room_name":"Phòng 201","room_no":"201","floor":"2","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Dạ dày - Thực quản","occupied":"true","patient_id":"BN1003","mrn":"BA240003","patient_name":"Hoàng Thị G","dob":"01/01/1001","age":"60","sex":"Nam","diagnosis":"Ung thư đại tràng sigma","doctor":"BS. Hoàng Thị E","nurse":"ĐD. Lê Văn P","admit_date":"2025-05-29","los_days":"12","severity":"green","severity_label":"Bình thường","hr":"92","temp":"36.6","spo2":"96","bp_sys":"131","bp_dia":"75","pending_orders":"1","new_orders_today":"2","unsigned_docs":"0","abnormal_labs":"1"},{"bed_id":"G202A","room_name":"Phòng 202","room_no":"202","floor":"2","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Đại - Trực tràng","occupied":"true","patient_id":"BN1004","mrn":"BA240004","patient_name":"Phạm Văn B","dob":"01/01/1001","age":"43","sex":"Nam","diagnosis":"Ung thư trực tràng thấp","doctor":"BS. Ngô Văn K","nurse":"ĐD. Trần Thị N","admit_date":"2025-05-23","los_days":"18","severity":"red","severity_label":"Cấp cứu","hr":"144","temp":"40.0","spo2":"86","bp_sys":"89","bp_dia":"56","pending_orders":"3","new_orders_today":"2","unsigned_docs":"3","abnormal_labs":"3"},{"bed_id":"G202B","room_name":"Phòng 202","room_no":"202","floor":"2","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Đại - Trực tràng","occupied":"true","patient_id":"BN1005","mrn":"BA240005","patient_name":"Bùi Văn X","dob":"01/01/1001","age":"35","sex":"Nam","diagnosis":"Ung thư dạ dày di căn phúc mạc","doctor":"BS. Lê Thị C","nurse":"ĐD. Vũ Thị S","admit_date":"2025-06-09","los_days":"1","severity":"red","severity_label":"Cấp cứu","hr":"138","temp":"39.9","spo2":"85","bp_sys":"71","bp_dia":"52","pending_orders":"3","new_orders_today":"1","unsigned_docs":"0","abnormal_labs":"3"},{"bed_id":"G202C","room_name":"Phòng 202","room_no":"202","floor":"2","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Đại - Trực tràng","occupied":"true","patient_id":"BN1006","mrn":"BA240006","patient_name":"Ngô Thị E","dob":"01/01/1001","age":"74","sex":"Nữ","diagnosis":"Ung thư dạ dày di căn phúc mạc","doctor":"BS. Ngô Văn K","nurse":"ĐD. Đỗ Thị T","admit_date":"2025-06-03","los_days":"7","severity":"orange","severity_label":"Cảnh báo","hr":"56","temp":"38.3","spo2":"92","bp_sys":"154","bp_dia":"98","pending_orders":"3","new_orders_today":"2","unsigned_docs":"2","abnormal_labs":"2"},{"bed_id":"G203A","room_name":"Phòng 203","room_no":"203","floor":"2","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Gan - Mật - Tụy","occupied":"true","patient_id":"BN1007","mrn":"BA240007","patient_name":"Trần Văn H","dob":"01/01/1001","age":"40","sex":"Nam","diagnosis":"Cổ trướng do ung thư phúc mạc","doctor":"BS. Ngô Văn K","nurse":"ĐD. Lê Văn P","admit_date":"2025-05-27","los_days":"14","severity":"orange","severity_label":"Cảnh báo","hr":"58","temp":"38.2","spo2":"91","bp_sys":"154","bp_dia":"88","pending_orders":"3","new_orders_today":"0","unsigned_docs":"0","abnormal_labs":"2"},{"bed_id":"G203B","room_name":"Phòng 203","room_no":"203","floor":"2","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Gan - Mật - Tụy","occupied":"true","patient_id":"BN1008","mrn":"BA240008","patient_name":"Phạm Văn G","dob":"01/01/1001","age":"54","sex":"Nữ","diagnosis":"Di căn gan từ ung thư đại trực tràng","doctor":"BS. Hoàng Thị E","nurse":"ĐD. Đỗ Thị T","admit_date":"2025-06-08","los_days":"2","severity":"orange","severity_label":"Cảnh báo","hr":"105","temp":"38.9","spo2":"92","bp_sys":"99","bp_dia":"68","pending_orders":"3","new_orders_today":"1","unsigned_docs":"0","abnormal_labs":"2"},{"bed_id":"G203C","room_name":"Phòng 203","room_no":"203","floor":"2","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Gan - Mật - Tụy","occupied":"true","patient_id":"BN1009","mrn":"BA240009","patient_name":"Hoàng Thị K","dob":"01/01/1001","age":"89","sex":"Nam","diagnosis":"Tắc ruột do u đại tràng","doctor":"BS. Trần Văn B","nurse":"ĐD. Vũ Thị S","admit_date":"2025-06-08","los_days":"2","severity":"green","severity_label":"Bình thường","hr":"69","temp":"37.0","spo2":"97","bp_sys":"113","bp_dia":"78","pending_orders":"0","new_orders_today":"1","unsigned_docs":"1","abnormal_labs":"0"},{"bed_id":"G204A","room_name":"Phòng 204","room_no":"204","floor":"2","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Hóa trị nội trú","occupied":"false","patient_id":"","mrn":"","patient_name":"","dob":"","age":"","sex":"","diagnosis":"","doctor":"","nurse":"","admit_date":"","los_days":"","severity":"","severity_label":"","hr":"","temp":"","spo2":"","bp_sys":"","bp_dia":"","pending_orders":"","new_orders_today":"","unsigned_docs":"","abnormal_labs":""},{"bed_id":"G204B","room_name":"Phòng 204","room_no":"204","floor":"2","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Hóa trị nội trú","occupied":"true","patient_id":"BN1010","mrn":"BA240010","patient_name":"Đặng Thị D","dob":"01/01/1001","age":"88","sex":"Nam","diagnosis":"Tắc ruột do u đại tràng","doctor":"BS. Trần Văn B","nurse":"ĐD. Trần Thị N","admit_date":"2025-05-27","los_days":"14","severity":"green","severity_label":"Bình thường","hr":"89","temp":"37.0","spo2":"98","bp_sys":"120","bp_dia":"73","pending_orders":"1","new_orders_today":"2","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G204C","room_name":"Phòng 204","room_no":"204","floor":"2","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Hóa trị nội trú","occupied":"false","patient_id":"","mrn":"","patient_name":"","dob":"","age":"","sex":"","diagnosis":"","doctor":"","nurse":"","admit_date":"","los_days":"","severity":"","severity_label":"","hr":"","temp":"","spo2":"","bp_sys":"","bp_dia":"","pending_orders":"","new_orders_today":"","unsigned_docs":"","abnormal_labs":""},{"bed_id":"G205A","room_name":"Phòng 205","room_no":"205","floor":"2","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Chăm sóc giảm nhẹ","occupied":"true","patient_id":"BN1011","mrn":"BA240011","patient_name":"Bùi Văn P","dob":"01/01/1001","age":"87","sex":"Nam","diagnosis":"Ung thư dạ dày giai đoạn III","doctor":"BS. Ngô Văn K","nurse":"ĐD. Trần Thị N","admit_date":"2025-06-07","los_days":"3","severity":"green","severity_label":"Bình thường","hr":"85","temp":"36.7","spo2":"98","bp_sys":"116","bp_dia":"84","pending_orders":"1","new_orders_today":"2","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G205B","room_name":"Phòng 205","room_no":"205","floor":"2","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Chăm sóc giảm nhẹ","occupied":"true","patient_id":"BN1012","mrn":"BA240012","patient_name":"Hoàng Thị G","dob":"01/01/1001","age":"56","sex":"Nữ","diagnosis":"Ung thư đại tràng phải biến chứng chảy máu","doctor":"BS. Trần Văn B","nurse":"ĐD. Hoàng Văn R","admit_date":"2025-05-19","los_days":"22","severity":"green","severity_label":"Bình thường","hr":"71","temp":"37.3","spo2":"97","bp_sys":"120","bp_dia":"71","pending_orders":"0","new_orders_today":"2","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G205C","room_name":"Phòng 205","room_no":"205","floor":"2","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Chăm sóc giảm nhẹ","occupied":"true","patient_id":"BN1013","mrn":"BA240013","patient_name":"Dương Văn K","dob":"01/01/1001","age":"73","sex":"Nữ","diagnosis":"Ung thư đường mật rốn gan","doctor":"BS. Vũ Quang F","nurse":"ĐD. Bùi Thị U","admit_date":"2025-06-01","los_days":"9","severity":"green","severity_label":"Bình thường","hr":"69","temp":"36.6","spo2":"99","bp_sys":"120","bp_dia":"70","pending_orders":"0","new_orders_today":"2","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G301A","room_name":"Phòng 301","room_no":"301","floor":"3","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Dạ dày - Thực quản","occupied":"true","patient_id":"BN1014","mrn":"BA240014","patient_name":"Lê Thị X","dob":"01/01/1001","age":"63","sex":"Nữ","diagnosis":"Cổ trướng do ung thư phúc mạc","doctor":"BS. Trần Văn B","nurse":"ĐD. Trần Thị N","admit_date":"2025-06-07","los_days":"3","severity":"orange","severity_label":"Cảnh báo","hr":"104","temp":"38.8","spo2":"93","bp_sys":"97","bp_dia":"62","pending_orders":"1","new_orders_today":"0","unsigned_docs":"0","abnormal_labs":"1"},{"bed_id":"G301B","room_name":"Phòng 301","room_no":"301","floor":"3","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Dạ dày - Thực quản","occupied":"false","patient_id":"","mrn":"","patient_name":"","dob":"","age":"","sex":"","diagnosis":"","doctor":"","nurse":"","admit_date":"","los_days":"","severity":"","severity_label":"","hr":"","temp":"","spo2":"","bp_sys":"","bp_dia":"","pending_orders":"","new_orders_today":"","unsigned_docs":"","abnormal_labs":""},{"bed_id":"G301C","room_name":"Phòng 301","room_no":"301","floor":"3","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Dạ dày - Thực quản","occupied":"true","patient_id":"BN1015","mrn":"BA240015","patient_name":"Vũ Văn K","dob":"01/01/1001","age":"71","sex":"Nam","diagnosis":"Ung thư thực quản 1/3 dưới","doctor":"BS. Đặng Thu G","nurse":"ĐD. Đỗ Thị T","admit_date":"2025-05-21","los_days":"20","severity":"orange","severity_label":"Cảnh báo","hr":"104","temp":"38.9","spo2":"91","bp_sys":"153","bp_dia":"99","pending_orders":"2","new_orders_today":"1","unsigned_docs":"0","abnormal_labs":"1"},{"bed_id":"G302A","room_name":"Phòng 302","room_no":"302","floor":"3","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Đại - Trực tràng","occupied":"true","patient_id":"BN1016","mrn":"BA240016","patient_name":"Hoàng Thị G","dob":"01/01/1001","age":"78","sex":"Nam","diagnosis":"Xuất huyết tiêu hóa do u dạ dày","doctor":"BS. Trần Văn B","nurse":"ĐD. Bùi Thị U","admit_date":"2025-06-02","los_days":"8","severity":"orange","severity_label":"Cảnh báo","hr":"59","temp":"38.3","spo2":"91","bp_sys":"147","bp_dia":"94","pending_orders":"2","new_orders_today":"2","unsigned_docs":"0","abnormal_labs":"1"},{"bed_id":"G302B","room_name":"Phòng 302","room_no":"302","floor":"3","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Đại - Trực tràng","occupied":"false","patient_id":"","mrn":"","patient_name":"","dob":"","age":"","sex":"","diagnosis":"","doctor":"","nurse":"","admit_date":"","los_days":"","severity":"","severity_label":"","hr":"","temp":"","spo2":"","bp_sys":"","bp_dia":"","pending_orders":"","new_orders_today":"","unsigned_docs":"","abnormal_labs":""},{"bed_id":"G302C","room_name":"Phòng 302","room_no":"302","floor":"3","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Đại - Trực tràng","occupied":"false","patient_id":"","mrn":"","patient_name":"","dob":"","age":"","sex":"","diagnosis":"","doctor":"","nurse":"","admit_date":"","los_days":"","severity":"","severity_label":"","hr":"","temp":"","spo2":"","bp_sys":"","bp_dia":"","pending_orders":"","new_orders_today":"","unsigned_docs":"","abnormal_labs":""},{"bed_id":"G303A","room_name":"Phòng 303","room_no":"303","floor":"3","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Gan - Mật - Tụy","occupied":"true","patient_id":"BN1017","mrn":"BA240017","patient_name":"Vũ Văn T","dob":"01/01/1001","age":"71","sex":"Nữ","diagnosis":"Ung thư dạ dày giai đoạn III","doctor":"BS. Lê Thị C","nurse":"ĐD. Hoàng Văn R","admit_date":"2025-06-04","los_days":"6","severity":"green","severity_label":"Bình thường","hr":"86","temp":"37.4","spo2":"98","bp_sys":"113","bp_dia":"71","pending_orders":"1","new_orders_today":"3","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G303B","room_name":"Phòng 303","room_no":"303","floor":"3","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Gan - Mật - Tụy","occupied":"true","patient_id":"BN1018","mrn":"BA240018","patient_name":"Dương Văn D","dob":"01/01/1001","age":"52","sex":"Nam","diagnosis":"U lympho dạ dày (MALT)","doctor":"BS. Trần Văn B","nurse":"ĐD. Đỗ Thị T","admit_date":"2025-06-09","los_days":"1","severity":"orange","severity_label":"Cảnh báo","hr":"58","temp":"38.1","spo2":"93","bp_sys":"104","bp_dia":"70","pending_orders":"1","new_orders_today":"4","unsigned_docs":"0","abnormal_labs":"2"},{"bed_id":"G303C","room_name":"Phòng 303","room_no":"303","floor":"3","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Gan - Mật - Tụy","occupied":"false","patient_id":"","mrn":"","patient_name":"","dob":"","age":"","sex":"","diagnosis":"","doctor":"","nurse":"","admit_date":"","los_days":"","severity":"","severity_label":"","hr":"","temp":"","spo2":"","bp_sys":"","bp_dia":"","pending_orders":"","new_orders_today":"","unsigned_docs":"","abnormal_labs":""},{"bed_id":"G304A","room_name":"Phòng 304","room_no":"304","floor":"3","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Hóa trị nội trú","occupied":"true","patient_id":"BN1019","mrn":"BA240019","patient_name":"Hoàng Thị V","dob":"01/01/1001","age":"48","sex":"Nữ","diagnosis":"Ung thư đại tràng sigma","doctor":"BS. Phạm Minh D","nurse":"ĐD. Phạm Thị Q","admit_date":"2025-05-27","los_days":"14","severity":"red","severity_label":"Cấp cứu","hr":"141","temp":"39.9","spo2":"86","bp_sys":"76","bp_dia":"60","pending_orders":"5","new_orders_today":"4","unsigned_docs":"1","abnormal_labs":"4"},{"bed_id":"G304B","room_name":"Phòng 304","room_no":"304","floor":"3","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Hóa trị nội trú","occupied":"true","patient_id":"BN1020","mrn":"BA240020","patient_name":"Bùi Văn G","dob":"01/01/1001","age":"70","sex":"Nam","diagnosis":"Ung thư đại tràng sigma","doctor":"BS. Đặng Thu G","nurse":"ĐD. Trần Thị N","admit_date":"2025-06-02","los_days":"8","severity":"green","severity_label":"Bình thường","hr":"89","temp":"36.8","spo2":"97","bp_sys":"116","bp_dia":"70","pending_orders":"0","new_orders_today":"0","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G304C","room_name":"Phòng 304","room_no":"304","floor":"3","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Hóa trị nội trú","occupied":"true","patient_id":"BN1021","mrn":"BA240021","patient_name":"Bùi Văn V","dob":"01/01/1001","age":"84","sex":"Nam","diagnosis":"Xuất huyết tiêu hóa do u dạ dày","doctor":"BS. Ngô Văn K","nurse":"ĐD. Đỗ Thị T","admit_date":"2025-06-02","los_days":"8","severity":"orange","severity_label":"Cảnh báo","hr":"104","temp":"38.7","spo2":"91","bp_sys":"107","bp_dia":"60","pending_orders":"3","new_orders_today":"0","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G305A","room_name":"Phòng 305","room_no":"305","floor":"3","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Chăm sóc giảm nhẹ","occupied":"true","patient_id":"BN1022","mrn":"BA240022","patient_name":"Bùi Văn E","dob":"01/01/1001","age":"79","sex":"Nữ","diagnosis":"Ung thư thực quản đoạn ngực","doctor":"BS. Đặng Thu G","nurse":"ĐD. Bùi Thị U","admit_date":"2025-05-21","los_days":"20","severity":"green","severity_label":"Bình thường","hr":"91","temp":"37.3","spo2":"99","bp_sys":"129","bp_dia":"77","pending_orders":"0","new_orders_today":"2","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G305B","room_name":"Phòng 305","room_no":"305","floor":"3","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Chăm sóc giảm nhẹ","occupied":"true","patient_id":"BN1023","mrn":"BA240023","patient_name":"Phạm Văn M","dob":"01/01/1001","age":"77","sex":"Nữ","diagnosis":"Ung thư dạ dày di căn phúc mạc","doctor":"BS. Vũ Quang F","nurse":"ĐD. Bùi Thị U","admit_date":"2025-06-07","los_days":"3","severity":"orange","severity_label":"Cảnh báo","hr":"57","temp":"38.3","spo2":"93","bp_sys":"142","bp_dia":"91","pending_orders":"2","new_orders_today":"0","unsigned_docs":"1","abnormal_labs":"2"},{"bed_id":"G305C","room_name":"Phòng 305","room_no":"305","floor":"3","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Chăm sóc giảm nhẹ","occupied":"true","patient_id":"BN1024","mrn":"BA240024","patient_name":"Đặng Thị V","dob":"01/01/1001","age":"49","sex":"Nữ","diagnosis":"Tắc mật do u đầu tụy","doctor":"BS. Trần Văn B","nurse":"ĐD. Phạm Thị Q","admit_date":"2025-05-27","los_days":"14","severity":"orange","severity_label":"Cảnh báo","hr":"112","temp":"38.8","spo2":"93","bp_sys":"152","bp_dia":"93","pending_orders":"2","new_orders_today":"3","unsigned_docs":"0","abnormal_labs":"1"},{"bed_id":"G401A","room_name":"Phòng 401","room_no":"401","floor":"4","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Dạ dày - Thực quản","occupied":"true","patient_id":"BN1025","mrn":"BA240025","patient_name":"Ngô Thị H","dob":"01/01/1001","age":"59","sex":"Nam","diagnosis":"U lympho dạ dày (MALT)","doctor":"BS. Bùi Thanh H","nurse":"ĐD. Bùi Thị U","admit_date":"2025-06-09","los_days":"1","severity":"green","severity_label":"Bình thường","hr":"80","temp":"36.8","spo2":"99","bp_sys":"117","bp_dia":"83","pending_orders":"1","new_orders_today":"4","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G401B","room_name":"Phòng 401","room_no":"401","floor":"4","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Dạ dày - Thực quản","occupied":"true","patient_id":"BN1026","mrn":"BA240026","patient_name":"Nguyễn Thị T","dob":"01/01/1001","age":"65","sex":"Nam","diagnosis":"Ung thư trực tràng thấp","doctor":"BS. Bùi Thanh H","nurse":"ĐD. Lê Văn P","admit_date":"2025-05-26","los_days":"15","severity":"red","severity_label":"Cấp cứu","hr":"40","temp":"34.9","spo2":"86","bp_sys":"82","bp_dia":"63","pending_orders":"4","new_orders_today":"4","unsigned_docs":"3","abnormal_labs":"1"},{"bed_id":"G401C","room_name":"Phòng 401","room_no":"401","floor":"4","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Dạ dày - Thực quản","occupied":"true","patient_id":"BN1027","mrn":"BA240027","patient_name":"Nguyễn Thị Q","dob":"01/01/1001","age":"42","sex":"Nam","diagnosis":"Ung thư đại tràng di căn gan","doctor":"BS. Trần Văn B","nurse":"ĐD. Phạm Thị Q","admit_date":"2025-06-03","los_days":"7","severity":"green","severity_label":"Bình thường","hr":"68","temp":"37.1","spo2":"97","bp_sys":"116","bp_dia":"77","pending_orders":"0","new_orders_today":"2","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G402A","room_name":"Phòng 402","room_no":"402","floor":"4","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Đại - Trực tràng","occupied":"false","patient_id":"","mrn":"","patient_name":"","dob":"","age":"","sex":"","diagnosis":"","doctor":"","nurse":"","admit_date":"","los_days":"","severity":"","severity_label":"","hr":"","temp":"","spo2":"","bp_sys":"","bp_dia":"","pending_orders":"","new_orders_today":"","unsigned_docs":"","abnormal_labs":""},{"bed_id":"G402B","room_name":"Phòng 402","room_no":"402","floor":"4","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Đại - Trực tràng","occupied":"true","patient_id":"BN1028","mrn":"BA240028","patient_name":"Vũ Văn G","dob":"01/01/1001","age":"66","sex":"Nam","diagnosis":"Ung thư đầu tụy","doctor":"BS. Vũ Quang F","nurse":"ĐD. Trần Thị N","admit_date":"2025-05-22","los_days":"19","severity":"red","severity_label":"Cấp cứu","hr":"44","temp":"39.6","spo2":"88","bp_sys":"202","bp_dia":"113","pending_orders":"4","new_orders_today":"4","unsigned_docs":"0","abnormal_labs":"1"},{"bed_id":"G402C","room_name":"Phòng 402","room_no":"402","floor":"4","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Đại - Trực tràng","occupied":"true","patient_id":"BN1029","mrn":"BA240029","patient_name":"Nguyễn Thị Q","dob":"01/01/1001","age":"62","sex":"Nữ","diagnosis":"U thần kinh nội tiết tụy (pNET)","doctor":"BS. Lê Thị C","nurse":"ĐD. Vũ Thị S","admit_date":"2025-06-09","los_days":"1","severity":"green","severity_label":"Bình thường","hr":"81","temp":"37.2","spo2":"96","bp_sys":"125","bp_dia":"75","pending_orders":"1","new_orders_today":"4","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G403A","room_name":"Phòng 403","room_no":"403","floor":"4","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Gan - Mật - Tụy","occupied":"true","patient_id":"BN1030","mrn":"BA240030","patient_name":"Hoàng Thị Y","dob":"01/01/1001","age":"57","sex":"Nữ","diagnosis":"Tắc ruột do u đại tràng","doctor":"BS. Vũ Quang F","nurse":"ĐD. Vũ Thị S","admit_date":"2025-06-02","los_days":"8","severity":"green","severity_label":"Bình thường","hr":"70","temp":"36.8","spo2":"99","bp_sys":"119","bp_dia":"82","pending_orders":"1","new_orders_today":"2","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G403B","room_name":"Phòng 403","room_no":"403","floor":"4","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Gan - Mật - Tụy","occupied":"true","patient_id":"BN1031","mrn":"BA240031","patient_name":"Nguyễn Thị Y","dob":"01/01/1001","age":"82","sex":"Nữ","diagnosis":"Ung thư đầu tụy","doctor":"BS. Ngô Văn K","nurse":"ĐD. Phạm Thị Q","admit_date":"2025-05-29","los_days":"12","severity":"green","severity_label":"Bình thường","hr":"76","temp":"36.8","spo2":"98","bp_sys":"129","bp_dia":"70","pending_orders":"0","new_orders_today":"3","unsigned_docs":"0","abnormal_labs":"1"},{"bed_id":"G403C","room_name":"Phòng 403","room_no":"403","floor":"4","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Gan - Mật - Tụy","occupied":"false","patient_id":"","mrn":"","patient_name":"","dob":"","age":"","sex":"","diagnosis":"","doctor":"","nurse":"","admit_date":"","los_days":"","severity":"","severity_label":"","hr":"","temp":"","spo2":"","bp_sys":"","bp_dia":"","pending_orders":"","new_orders_today":"","unsigned_docs":"","abnormal_labs":""},{"bed_id":"G404A","room_name":"Phòng 404","room_no":"404","floor":"4","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Hóa trị nội trú","occupied":"true","patient_id":"BN1032","mrn":"BA240032","patient_name":"Ngô Thị H","dob":"01/01/1001","age":"72","sex":"Nữ","diagnosis":"Di căn gan từ ung thư đại trực tràng","doctor":"BS. Ngô Văn K","nurse":"ĐD. Nguyễn Thị M","admit_date":"2025-06-07","los_days":"3","severity":"green","severity_label":"Bình thường","hr":"77","temp":"36.7","spo2":"97","bp_sys":"121","bp_dia":"80","pending_orders":"1","new_orders_today":"3","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G404B","room_name":"Phòng 404","room_no":"404","floor":"4","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Hóa trị nội trú","occupied":"true","patient_id":"BN1033","mrn":"BA240033","patient_name":"Ngô Thị P","dob":"01/01/1001","age":"50","sex":"Nữ","diagnosis":"U lympho dạ dày (MALT)","doctor":"BS. Vũ Quang F","nurse":"ĐD. Hoàng Văn R","admit_date":"2025-06-02","los_days":"8","severity":"green","severity_label":"Bình thường","hr":"71","temp":"37.1","spo2":"98","bp_sys":"115","bp_dia":"81","pending_orders":"0","new_orders_today":"2","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G404C","room_name":"Phòng 404","room_no":"404","floor":"4","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Hóa trị nội trú","occupied":"true","patient_id":"BN1034","mrn":"BA240034","patient_name":"Dương Văn N","dob":"01/01/1001","age":"34","sex":"Nam","diagnosis":"Ung thư đại tràng sigma","doctor":"BS. Hoàng Thị E","nurse":"ĐD. Vũ Thị S","admit_date":"2025-06-04","los_days":"6","severity":"orange","severity_label":"Cảnh báo","hr":"109","temp":"38.2","spo2":"91","bp_sys":"157","bp_dia":"98","pending_orders":"2","new_orders_today":"4","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G405A","room_name":"Phòng 405","room_no":"405","floor":"4","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Chăm sóc giảm nhẹ","occupied":"true","patient_id":"BN1035","mrn":"BA240035","patient_name":"Hoàng Thị Y","dob":"01/01/1001","age":"58","sex":"Nữ","diagnosis":"Ung thư bóng Vater","doctor":"BS. Phạm Minh D","nurse":"ĐD. Nguyễn Thị M","admit_date":"2025-06-01","los_days":"9","severity":"green","severity_label":"Bình thường","hr":"83","temp":"36.6","spo2":"96","bp_sys":"124","bp_dia":"77","pending_orders":"0","new_orders_today":"1","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G405B","room_name":"Phòng 405","room_no":"405","floor":"4","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Chăm sóc giảm nhẹ","occupied":"true","patient_id":"BN1036","mrn":"BA240036","patient_name":"Lê Thị N","dob":"01/01/1001","age":"33","sex":"Nam","diagnosis":"Ung thư thực quản 1/3 dưới","doctor":"BS. Bùi Thanh H","nurse":"ĐD. Phạm Thị Q","admit_date":"2025-05-24","los_days":"17","severity":"red","severity_label":"Cấp cứu","hr":"47","temp":"35.2","spo2":"86","bp_sys":"198","bp_dia":"129","pending_orders":"2","new_orders_today":"2","unsigned_docs":"0","abnormal_labs":"2"},{"bed_id":"G405C","room_name":"Phòng 405","room_no":"405","floor":"4","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Chăm sóc giảm nhẹ","occupied":"true","patient_id":"BN1037","mrn":"BA240037","patient_name":"Trần Văn G","dob":"01/01/1001","age":"43","sex":"Nam","diagnosis":"Cổ trướng do ung thư phúc mạc","doctor":"BS. Lê Thị C","nurse":"ĐD. Lê Văn P","admit_date":"2025-06-09","los_days":"1","severity":"orange","severity_label":"Cảnh báo","hr":"59","temp":"38.3","spo2":"91","bp_sys":"106","bp_dia":"67","pending_orders":"1","new_orders_today":"4","unsigned_docs":"2","abnormal_labs":"2"},{"bed_id":"G501A","room_name":"Phòng 501","room_no":"501","floor":"5","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Dạ dày - Thực quản","occupied":"true","patient_id":"BN1038","mrn":"BA240038","patient_name":"Phạm Văn V","dob":"01/01/1001","age":"35","sex":"Nam","diagnosis":"Ung thư biểu mô tế bào gan (HCC)","doctor":"BS. Vũ Quang F","nurse":"ĐD. Lê Văn P","admit_date":"2025-06-07","los_days":"3","severity":"green","severity_label":"Bình thường","hr":"69","temp":"36.6","spo2":"98","bp_sys":"131","bp_dia":"81","pending_orders":"1","new_orders_today":"2","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G501B","room_name":"Phòng 501","room_no":"501","floor":"5","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Dạ dày - Thực quản","occupied":"true","patient_id":"BN1039","mrn":"BA240039","patient_name":"Đặng Thị M","dob":"01/01/1001","age":"60","sex":"Nữ","diagnosis":"Ung thư dạ dày tâm vị","doctor":"BS. Lê Thị C","nurse":"ĐD. Nguyễn Thị M","admit_date":"2025-05-27","los_days":"14","severity":"orange","severity_label":"Cảnh báo","hr":"60","temp":"38.0","spo2":"91","bp_sys":"158","bp_dia":"100","pending_orders":"3","new_orders_today":"1","unsigned_docs":"0","abnormal_labs":"1"},{"bed_id":"G501C","room_name":"Phòng 501","room_no":"501","floor":"5","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Dạ dày - Thực quản","occupied":"true","patient_id":"BN1040","mrn":"BA240040","patient_name":"Bùi Văn X","dob":"01/01/1001","age":"86","sex":"Nữ","diagnosis":"Ung thư đầu tụy","doctor":"BS. Bùi Thanh H","nurse":"ĐD. Bùi Thị U","admit_date":"2025-06-07","los_days":"3","severity":"orange","severity_label":"Cảnh báo","hr":"58","temp":"38.3","spo2":"93","bp_sys":"143","bp_dia":"93","pending_orders":"2","new_orders_today":"3","unsigned_docs":"0","abnormal_labs":"2"},{"bed_id":"G502A","room_name":"Phòng 502","room_no":"502","floor":"5","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Đại - Trực tràng","occupied":"true","patient_id":"BN1041","mrn":"BA240041","patient_name":"Ngô Thị B","dob":"01/01/1001","age":"57","sex":"Nam","diagnosis":"Ung thư bóng Vater","doctor":"BS. Vũ Quang F","nurse":"ĐD. Vũ Thị S","admit_date":"2025-06-06","los_days":"4","severity":"green","severity_label":"Bình thường","hr":"92","temp":"36.9","spo2":"96","bp_sys":"129","bp_dia":"77","pending_orders":"1","new_orders_today":"4","unsigned_docs":"0","abnormal_labs":"1"},{"bed_id":"G502B","room_name":"Phòng 502","room_no":"502","floor":"5","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Đại - Trực tràng","occupied":"true","patient_id":"BN1042","mrn":"BA240042","patient_name":"Bùi Văn X","dob":"01/01/1001","age":"76","sex":"Nam","diagnosis":"Ung thư đường mật rốn gan","doctor":"BS. Vũ Quang F","nurse":"ĐD. Lê Văn P","admit_date":"2025-05-31","los_days":"10","severity":"red","severity_label":"Cấp cứu","hr":"134","temp":"39.0","spo2":"89","bp_sys":"185","bp_dia":"127","pending_orders":"5","new_orders_today":"3","unsigned_docs":"1","abnormal_labs":"1"},{"bed_id":"G502C","room_name":"Phòng 502","room_no":"502","floor":"5","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Đại - Trực tràng","occupied":"true","patient_id":"BN1043","mrn":"BA240043","patient_name":"Trần Văn E","dob":"01/01/1001","age":"59","sex":"Nữ","diagnosis":"Ung thư thực quản đoạn ngực","doctor":"BS. Vũ Quang F","nurse":"ĐD. Đỗ Thị T","admit_date":"2025-05-25","los_days":"16","severity":"orange","severity_label":"Cảnh báo","hr":"57","temp":"38.5","spo2":"92","bp_sys":"146","bp_dia":"89","pending_orders":"2","new_orders_today":"2","unsigned_docs":"3","abnormal_labs":"1"},{"bed_id":"G503A","room_name":"Phòng 503","room_no":"503","floor":"5","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Gan - Mật - Tụy","occupied":"true","patient_id":"BN1044","mrn":"BA240044","patient_name":"Nguyễn Thị N","dob":"01/01/1001","age":"74","sex":"Nữ","diagnosis":"Tắc ruột do u đại tràng","doctor":"BS. Ngô Văn K","nurse":"ĐD. Lê Văn P","admit_date":"2025-05-26","los_days":"15","severity":"red","severity_label":"Cấp cứu","hr":"47","temp":"35.3","spo2":"87","bp_sys":"209","bp_dia":"117","pending_orders":"5","new_orders_today":"3","unsigned_docs":"0","abnormal_labs":"2"},{"bed_id":"G503B","room_name":"Phòng 503","room_no":"503","floor":"5","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Gan - Mật - Tụy","occupied":"true","patient_id":"BN1045","mrn":"BA240045","patient_name":"Nguyễn Thị P","dob":"01/01/1001","age":"75","sex":"Nữ","diagnosis":"Xuất huyết tiêu hóa do u dạ dày","doctor":"BS. Bùi Thanh H","nurse":"ĐD. Lê Văn P","admit_date":"2025-05-25","los_days":"16","severity":"green","severity_label":"Bình thường","hr":"69","temp":"36.6","spo2":"98","bp_sys":"115","bp_dia":"83","pending_orders":"1","new_orders_today":"0","unsigned_docs":"0","abnormal_labs":"1"},{"bed_id":"G503C","room_name":"Phòng 503","room_no":"503","floor":"5","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"UT Gan - Mật - Tụy","occupied":"true","patient_id":"BN1046","mrn":"BA240046","patient_name":"Lê Thị V","dob":"01/01/1001","age":"83","sex":"Nam","diagnosis":"Ung thư trực tràng thấp","doctor":"BS. Ngô Văn K","nurse":"ĐD. Hoàng Văn R","admit_date":"2025-05-30","los_days":"11","severity":"green","severity_label":"Bình thường","hr":"87","temp":"37.1","spo2":"96","bp_sys":"122","bp_dia":"83","pending_orders":"1","new_orders_today":"3","unsigned_docs":"0","abnormal_labs":"0"},{"bed_id":"G504A","room_name":"Phòng 504","room_no":"504","floor":"5","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Hóa trị nội trú","occupied":"false","patient_id":"","mrn":"","patient_name":"","dob":"","age":"","sex":"","diagnosis":"","doctor":"","nurse":"","admit_date":"","los_days":"","severity":"","severity_label":"","hr":"","temp":"","spo2":"","bp_sys":"","bp_dia":"","pending_orders":"","new_orders_today":"","unsigned_docs":"","abnormal_labs":""},{"bed_id":"G504B","room_name":"Phòng 504","room_no":"504","floor":"5","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Hóa trị nội trú","occupied":"false","patient_id":"","mrn":"","patient_name":"","dob":"","age":"","sex":"","diagnosis":"","doctor":"","nurse":"","admit_date":"","los_days":"","severity":"","severity_label":"","hr":"","temp":"","spo2":"","bp_sys":"","bp_dia":"","pending_orders":"","new_orders_today":"","unsigned_docs":"","abnormal_labs":""},{"bed_id":"G504C","room_name":"Phòng 504","room_no":"504","floor":"5","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Hóa trị nội trú","occupied":"true","patient_id":"BN1047","mrn":"BA240047","patient_name":"Ngô Thị B","dob":"01/01/1001","age":"67","sex":"Nam","diagnosis":"Ung thư dạ dày di căn phúc mạc","doctor":"BS. Vũ Quang F","nurse":"ĐD. Phạm Thị Q","admit_date":"2025-05-17","los_days":"24","severity":"red","severity_label":"Cấp cứu","hr":"122","temp":"40.1","spo2":"87","bp_sys":"185","bp_dia":"111","pending_orders":"4","new_orders_today":"3","unsigned_docs":"2","abnormal_labs":"1"},{"bed_id":"G505A","room_name":"Phòng 505","room_no":"505","floor":"5","bed_label":"A","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Chăm sóc giảm nhẹ","occupied":"true","patient_id":"BN1048","mrn":"BA240048","patient_name":"Lê Thị H","dob":"01/01/1001","age":"61","sex":"Nữ","diagnosis":"Tắc ruột do u đại tràng","doctor":"BS. Phạm Minh D","nurse":"ĐD. Lê Văn P","admit_date":"2025-06-04","los_days":"6","severity":"orange","severity_label":"Cảnh báo","hr":"60","temp":"38.6","spo2":"91","bp_sys":"155","bp_dia":"91","pending_orders":"2","new_orders_today":"0","unsigned_docs":"2","abnormal_labs":"2"},{"bed_id":"G505B","room_name":"Phòng 505","room_no":"505","floor":"5","bed_label":"B","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Chăm sóc giảm nhẹ","occupied":"false","patient_id":"","mrn":"","patient_name":"","dob":"","age":"","sex":"","diagnosis":"","doctor":"","nurse":"","admit_date":"","los_days":"","severity":"","severity_label":"","hr":"","temp":"","spo2":"","bp_sys":"","bp_dia":"","pending_orders":"","new_orders_today":"","unsigned_docs":"","abnormal_labs":""},{"bed_id":"G505C","room_name":"Phòng 505","room_no":"505","floor":"5","bed_label":"C","department":"Khoa Nội tiêu hóa theo yêu cầu","cluster":"Chăm sóc giảm nhẹ","occupied":"true","patient_id":"BN1049","mrn":"BA240049","patient_name":"Bùi Văn N","dob":"01/01/1001","age":"71","sex":"Nam","diagnosis":"Ung thư trực tràng thấp","doctor":"BS. Ngô Văn K","nurse":"ĐD. Vũ Thị S","admit_date":"2025-05-22","los_days":"19","severity":"green","severity_label":"Bình thường","hr":"77","temp":"37.1","spo2":"99","bp_sys":"120","bp_dia":"77","pending_orders":"1","new_orders_today":"3","unsigned_docs":"0","abnormal_labs":"0"}];
+
+// ── ICONS ──
+const IC = {
+  user:  '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  heart: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.9-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>',
+  clip:  '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/></svg>',
+  doc:   '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>',
+  lab:   '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6l-5 9a2 2 0 0 0 1.8 3h12.4a2 2 0 0 0 1.8-3l-5-9V2"/><path d="M8 2h8"/></svg>',
+  bed:   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M2 10V6a2 2 0 0 1 2-2h4l2 4"/><line x1="2" y1="20" x2="22" y2="20"/></svg>',
+  alert: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+};
 
 // ── STATE ──
 let groupMode = 'room';
@@ -588,22 +470,60 @@ document.querySelectorAll('input[name="groupMode"]').forEach(r => {
   r.addEventListener('change', e => { groupMode = e.target.value; render(); });
 });
 
-document.querySelectorAll('input[name="density"]').forEach(r => {
-  r.addEventListener('change', e => {
-    document.body.className = document.body.className
-      .replace(/density-\w+/, '') + ' density-' + e.target.value;
-    document.body.className = document.body.className.replace(/\s+/, ' ').trim()
-      + ' info-' + document.getElementById('infoLevel').value;
-  });
-});
-
 document.getElementById('infoLevel').addEventListener('change', e => {
-  document.body.className = document.body.className.replace(/info-\w+/, '') + ' info-' + e.target.value;
+  document.body.className = (document.body.className.replace(/info-\w+/, '') + ' info-' + e.target.value).replace(/\s+/g, ' ').trim();
 });
 
 // Drawer
 document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
-document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.getElementById('drawer').addEventListener('click', e => {
+  if (e.target.closest('.drawer-close')) closeDrawer();
+});
+
+// ── HELPERS ──
+function bedLabelOf(d) { return d.bed_id.replace('G', '').replace(/(\d+)(\w)/, '$1·$2'); }
+
+function vClass(kind, d) {
+  if (kind === 'hr')   { const v = +d.hr;   return v >= 120 || v <= 50  ? 'v-abn' : v >= 100 || v <= 58 ? 'v-warn' : ''; }
+  if (kind === 'temp') { const v = +d.temp; return v >= 39  || v <= 35.5 ? 'v-abn' : v >= 38 ? 'v-warn' : ''; }
+  if (kind === 'spo2') { const v = +d.spo2; return v < 90 ? 'v-abn' : v < 94 ? 'v-warn' : ''; }
+  if (kind === 'bp')   { const s = +d.bp_sys, di = +d.bp_dia; if (s >= 180 || s <= 90 || di >= 110 || di <= 55) return 'v-abn'; if (s >= 140 || di >= 90) return 'v-warn'; return ''; }
+  return '';
+}
+
+// Y lệnh — sinh danh sách ổn định theo từng giường (khớp số y lệnh chờ)
+const ORDER_TEXT = [
+  'Truyền Noradrenalin 0,1 µg/kg/phút', 'Xét nghiệm khí máu động mạch (cấp)',
+  'Kháng sinh Meropenem 1g mỗi 8h', 'Chụp X-quang ngực tại giường',
+  'Truyền dịch NaCl 0,9% 500ml', 'Đo lactate máu lại sau 2h',
+  'Theo dõi SpO₂ liên tục', 'Insulin truyền tĩnh mạch theo phác đồ',
+  'Hội chẩn chuyên khoa Tim mạch', 'Lấy máu cấy tìm vi khuẩn',
+  'Furosemid 40mg tiêm tĩnh mạch', 'Chụp CT sọ não không cản quang',
+];
+function seedRand(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return function () {
+    h += 0x6D2B79F5; let t = Math.imul(h ^ (h >>> 15), 1 | h);
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function buildOrders(d) {
+  const rng = seedRand(d.bed_id);
+  const nPending = parseInt(d.pending_orders) || 0;
+  const total = nPending + 1 + Math.floor(rng() * 3);
+  const mins = ['00', '15', '30', '45'];
+  const out = [];
+  for (let i = 0; i < total; i++) {
+    out.push({
+      text: ORDER_TEXT[Math.floor(rng() * ORDER_TEXT.length)],
+      time: String(Math.floor(rng() * 24)).padStart(2, '0') + ':' + mins[Math.floor(rng() * mins.length)],
+      pending: i < nPending,
+    });
+  }
+  return out.sort((a, b) => (a.pending === b.pending ? 0 : a.pending ? -1 : 1));
+}
 
 // ── RENDER ──
 function render() {
@@ -624,54 +544,43 @@ function renderSummary() {
   const empty = DATA.filter(d => d.occupied === 'false').length;
 
   document.getElementById('summaryBar').innerHTML = `
-    <div class="summary-chip chip-red">🔴 Cấp cứu: <b>${red}</b></div>
-    <div class="summary-chip chip-orange">🟠 Cảnh báo: <b>${orange}</b></div>
-    <div class="summary-chip chip-green">🟢 Bình thường: <b>${green}</b></div>
-    <div class="summary-chip chip-gray">⬜ Trống: <b>${empty}</b></div>
-    <div class="summary-chip chip-gray" style="margin-left:auto">Tổng: <b>${DATA.length}</b> giường · <b>${occ.length}</b> có người</div>
+    <div class="summary-chip chip-red">Cấp cứu: <b>${red}</b></div>
+    <div class="summary-chip chip-orange">Cảnh báo: <b>${orange}</b></div>
+    <div class="summary-chip chip-green">Bình thường: <b>${green}</b></div>
+    <div class="summary-chip chip-gray">Trống: <b>${empty}</b></div>
   `;
+}
+
+function attachClicks(card, beds) {
+  card.querySelectorAll('.bed-tile').forEach((el, i) => {
+    el.addEventListener('click', () => openDrawer(beds[i]));
+  });
 }
 
 function renderByRoom(container) {
   const rooms = {};
-  DATA.forEach(d => {
-    if (!rooms[d.room_name]) rooms[d.room_name] = [];
-    rooms[d.room_name].push(d);
-  });
+  DATA.forEach(d => { (rooms[d.room_name] = rooms[d.room_name] || []).push(d); });
 
   Object.entries(rooms).forEach(([room, beds]) => {
     const card = document.createElement('div');
     card.className = 'cluster-card';
-
-    const occ = beds.filter(b => b.occupied === 'true').length;
-    const hasCritical = beds.some(b => b.severity === 'red');
-    const hasWarn = beds.some(b => b.severity === 'orange');
-    const accentColor = hasCritical ? 'var(--red)' : hasWarn ? 'var(--orange)' : 'var(--green)';
-
     card.innerHTML = `
       <div class="cluster-header">
-        <div class="cluster-header-left">
-          <div class="cluster-accent" style="background:${accentColor}"></div>
-          <span>${room}</span>
-          <span class="cluster-count">${beds[0].cluster}</span>
-        </div>
-        <span class="cluster-count">${occ}/${beds.length}</span>
+        <span class="cluster-name">${room}</span>
       </div>
       <div class="cluster-beds">${beds.map(bedTile).join('')}</div>
     `;
     container.appendChild(card);
-    card.querySelectorAll('.bed-tile').forEach((el, i) => {
-      el.addEventListener('click', () => openDrawer(beds[i]));
-    });
+    attachClicks(card, beds);
   });
 }
 
 function renderBySeverity(container) {
   const groups = [
-    { key: 'red',    label: '🔴 Cấp cứu',     color: 'var(--red)',    beds: DATA.filter(d => d.severity === 'red') },
-    { key: 'orange', label: '🟠 Cảnh báo',    color: 'var(--orange)', beds: DATA.filter(d => d.severity === 'orange') },
-    { key: 'green',  label: '🟢 Bình thường', color: 'var(--green)',  beds: DATA.filter(d => d.severity === 'green') },
-    { key: 'empty',  label: '⬜ Giường trống', color: 'var(--gray)',   beds: DATA.filter(d => d.occupied === 'false') },
+    { key: 'red',    label: 'Cấp cứu',      color: 'var(--red)',    beds: DATA.filter(d => d.occupied === 'true' && d.severity === 'red') },
+    { key: 'orange', label: 'Cảnh báo',     color: 'var(--orange)', beds: DATA.filter(d => d.occupied === 'true' && d.severity === 'orange') },
+    { key: 'green',  label: 'Bình thường',  color: 'var(--green)',  beds: DATA.filter(d => d.occupied === 'true' && d.severity === 'green') },
+    { key: 'empty',  label: 'Giường trống', color: 'var(--gray)',   beds: DATA.filter(d => d.occupied === 'false') },
   ];
 
   groups.forEach(g => {
@@ -680,68 +589,52 @@ function renderBySeverity(container) {
     card.className = 'cluster-card';
     card.innerHTML = `
       <div class="cluster-header">
-        <div class="cluster-header-left">
-          <div class="cluster-accent" style="background:${g.color}"></div>
-          <span>${g.label}</span>
-        </div>
-        <span class="cluster-count">${g.beds.length} giường</span>
+        <span class="cluster-dot" style="background:${g.color}"></span>
+        <span class="cluster-name">${g.label}</span>
       </div>
       <div class="cluster-beds">${g.beds.map(bedTile).join('')}</div>
     `;
     container.appendChild(card);
-    card.querySelectorAll('.bed-tile').forEach((el, i) => {
-      el.addEventListener('click', () => openDrawer(g.beds[i]));
-    });
+    attachClicks(card, g.beds);
   });
 }
 
 function bedTile(d) {
   const isOcc = d.occupied === 'true';
-  const sev = isOcc ? (d.severity || 'green') : 'empty';
-  const sevClass = 'sev-' + sev;
+  const bedLabel = bedLabelOf(d);
 
   if (!isOcc) {
     return `
-      <div class="bed-tile ${sevClass}">
-        <div class="bed-stripe"></div>
-        <div class="bed-body">
-          <div class="bed-empty-label">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#b0b8c4" stroke-width="2"><path d="M2 20v-8a2 2 0 012-2h16a2 2 0 012 2v8"/><path d="M2 10V6a2 2 0 012-2h4l2 4"/></svg>
-            ${d.bed_id.replace('G','').replace(/(\d+)(\w)/, '$1·$2')} – Giường trống
-          </div>
-        </div>
+      <div class="bed-tile sev-empty">
+        <span class="bed-no">${bedLabel}</span>
+        <span class="bed-empty-text">${IC.bed} Giường trống</span>
       </div>`;
   }
 
-  const bedLabel = d.bed_id.replace('G','').replace(/(\d+)(\w)/, '$1·$2');
+  const sev = d.severity || 'green';
   const orders = parseInt(d.pending_orders) || 0;
   const docs   = parseInt(d.unsigned_docs)  || 0;
   const labs   = parseInt(d.abnormal_labs)  || 0;
-  const hasWork = orders > 0 || docs > 0 || labs > 0;
-
-  const badges = hasWork ? `
-    ${orders > 0 ? `<span class="badge badge-order">⚡ ${orders}</span>` : ''}
-    ${docs   > 0 ? `<span class="badge badge-doc">📋 ${docs}</span>`    : ''}
-    ${labs   > 0 ? `<span class="badge badge-lab">🔬 ${labs}</span>`   : ''}
-  ` : `<span class="badge badge-clear">✓ Đã xử lý</span>`;
-
-  const diag = d.diagnosis.length > 32 ? d.diagnosis.slice(0,32)+'…' : d.diagnosis;
+  const badges = (orders || docs || labs) ? `
+    ${orders > 0 ? `<span class="wbadge orders">${IC.clip}${orders}</span>` : ''}
+    ${docs   > 0 ? `<span class="wbadge unsigned">${IC.doc}${docs}</span>`  : ''}
+    ${labs   > 0 ? `<span class="wbadge labs">${IC.lab}${labs}</span>`      : ''}
+  ` : `<span class="wbadge clean">Đã xử lý</span>`;
 
   return `
-    <div class="bed-tile ${sevClass}">
-      <div class="bed-stripe"></div>
-      <div class="bed-body">
-        <div class="bed-row1">
-          <div style="display:flex;align-items:center;gap:6px;min-width:0;flex:1">
-            <span class="bed-id">${bedLabel}</span>
-            <span class="bed-name">${d.patient_name}</span>
-          </div>
-        </div>
-        <div class="bed-row2">
-          <span class="bed-info">${d.age}t · ${d.sex} · ${diag}</span>
-          <div class="badge-group">${badges}</div>
-        </div>
-        <div class="bed-row3">${d.doctor} · ${d.nurse}</div>
+    <div class="bed-tile sev-${sev}">
+      <div class="bed-line1">
+        <span class="bed-no">${bedLabel}</span>
+        <span class="bed-name">${d.patient_name}</span>
+      </div>
+      <div class="bed-line2">
+        <span class="bed-meta">${d.age} tuổi · ${d.sex}</span>
+        <span class="bed-dx" title="${d.diagnosis}">${d.diagnosis}</span>
+        <span class="bed-badges">${badges}</span>
+      </div>
+      <div class="bed-staff">
+        <span class="bed-person">${IC.user} ${d.doctor}</span>
+        <span class="bed-person nurse">${IC.heart} ${d.nurse}</span>
       </div>
     </div>`;
 }
@@ -750,79 +643,82 @@ function bedTile(d) {
 function openDrawer(d) {
   currentBed = d;
   const isOcc = d.occupied === 'true';
-  const title = d.bed_id.replace('G','').replace(/(\d+)(\w)/, 'Giường $1·$2');
-  document.getElementById('drawerTitle').textContent = title;
+  const bedLabel = bedLabelOf(d);
+  const head = document.getElementById('drawerHead');
+  const body = document.getElementById('drawerBody');
 
-  let body = '';
   if (!isOcc) {
-    body = '<div style="color:var(--text-soft);text-align:center;padding:40px 0">Giường trống – không có thông tin bệnh nhân</div>';
+    head.innerHTML = `
+      <div>
+        <h2 class="dh-name">Giường ${bedLabel}</h2>
+        <div class="dh-meta">${d.room_name} · Chưa có người bệnh</div>
+      </div>
+      <button class="drawer-close" aria-label="Đóng">✕</button>`;
+    body.innerHTML = `<div class="drawer-empty">Giường trống – không có thông tin người bệnh</div>`;
   } else {
-    const sevColor = d.severity === 'red' ? 'red' : d.severity === 'orange' ? 'orange' : 'green';
+    const bannerText = d.severity === 'red' ? 'Cần theo dõi sát, xử trí ngay'
+      : d.severity === 'orange' ? 'Theo dõi tăng cường' : 'Tình trạng ổn định';
 
-    const hrAlert  = (parseInt(d.hr) >= 120 || parseInt(d.hr) <= 50) ? 'alert-red' : parseInt(d.hr) >= 100 ? 'alert-orange' : '';
-    const spo2Alert= parseInt(d.spo2) <= 89 ? 'alert-red' : parseInt(d.spo2) <= 93 ? 'alert-orange' : '';
-    const bpAlert  = parseInt(d.bp_sys) >= 180 || parseInt(d.bp_sys) <= 90 ? 'alert-red' : parseInt(d.bp_sys) >= 140 ? 'alert-orange' : '';
-    const tempAlert= (parseFloat(d.temp) >= 39 || parseFloat(d.temp) <= 35.5) ? 'alert-red' : parseFloat(d.temp) >= 38 ? 'alert-orange' : '';
-
-    body = `
-      <div class="drawer-section">
-        <div class="drawer-section-title">Mức độ</div>
-        <div class="sev-badge-large ${sevColor}">${d.severity_label}</div>
+    head.innerHTML = `
+      <div>
+        <h2 class="dh-name">${d.patient_name}</h2>
+        <div class="dh-meta">${d.mrn} · ${d.age} tuổi · ${d.sex} · NS ${d.dob}</div>
       </div>
+      <button class="drawer-close" aria-label="Đóng">✕</button>`;
 
-      <div class="drawer-section">
-        <div class="drawer-section-title">Thông tin bệnh nhân</div>
-        <div class="drawer-row"><span class="drawer-label">Mã BN</span><span class="drawer-val">${d.patient_id} · ${d.mrn}</span></div>
-        <div class="drawer-row"><span class="drawer-label">Họ tên</span><span class="drawer-val">${d.patient_name}</span></div>
-        <div class="drawer-row"><span class="drawer-label">Tuổi · Giới</span><span class="drawer-val">${d.age} tuổi · ${d.sex}</span></div>
-        <div class="drawer-row"><span class="drawer-label">Chẩn đoán</span><span class="drawer-val">${d.diagnosis}</span></div>
-        <div class="drawer-row"><span class="drawer-label">Nhập viện</span><span class="drawer-val">${d.admit_date} (${d.los_days} ngày)</span></div>
-        <div class="drawer-row"><span class="drawer-label">Phòng · Cụm</span><span class="drawer-val">${d.room_name} · ${d.cluster}</span></div>
-      </div>
+    body.innerHTML = `
+      <div class="drawer-banner ${d.severity}">${IC.alert} ${d.severity_label} — ${bannerText}</div>
 
-      <div class="drawer-section">
-        <div class="drawer-section-title">Dấu hiệu sinh tồn</div>
-        <div class="vitals-grid">
-          <div class="vital-box ${hrAlert}">
-            <div class="vital-label">Mạch</div>
-            <div class="vital-val">${d.hr}</div>
-            <div class="vital-unit">lần/phút</div>
-          </div>
-          <div class="vital-box ${tempAlert}">
-            <div class="vital-label">Nhiệt độ</div>
-            <div class="vital-val">${d.temp}</div>
-            <div class="vital-unit">°C</div>
-          </div>
-          <div class="vital-box ${spo2Alert}">
-            <div class="vital-label">SpO₂</div>
-            <div class="vital-val">${d.spo2}</div>
-            <div class="vital-unit">%</div>
-          </div>
-          <div class="vital-box ${bpAlert}">
-            <div class="vital-label">Huyết áp</div>
-            <div class="vital-val" style="font-size:14px">${d.bp_sys}/${d.bp_dia}</div>
-            <div class="vital-unit">mmHg</div>
-          </div>
+      <div class="d-card">
+        <h4>Thông tin nằm viện</h4>
+        <div class="d-grid">
+          <div class="d-item"><div class="di-label">Giường</div><div class="di-value">${bedLabel} · ${d.room_name}</div></div>
+          <div class="d-item"><div class="di-label">Bác sĩ phụ trách</div><div class="di-value">${d.doctor}</div></div>
+          <div class="d-item"><div class="di-label">Điều dưỡng phụ trách</div><div class="di-value">${d.nurse}</div></div>
+          <div class="d-item"><div class="di-label">Ngày nhập viện</div><div class="di-value">${d.admit_date}</div></div>
+          <div class="d-item"><div class="di-label">Số ngày nằm viện</div><div class="di-value">${d.los_days} ngày</div></div>
         </div>
       </div>
 
-      <div class="drawer-section">
-        <div class="drawer-section-title">Công việc cần xử lý</div>
-        <div class="drawer-row"><span class="drawer-label">Y lệnh chờ</span><span class="drawer-val">${d.pending_orders || 0}</span></div>
-        <div class="drawer-row"><span class="drawer-label">Y lệnh hôm nay</span><span class="drawer-val">${d.new_orders_today || 0}</span></div>
-        <div class="drawer-row"><span class="drawer-label">Hồ sơ chưa ký</span><span class="drawer-val" style="color:var(--red)">${d.unsigned_docs || 0}</span></div>
-        <div class="drawer-row"><span class="drawer-label">XN bất thường</span><span class="drawer-val" style="color:#1e40af">${d.abnormal_labs || 0}</span></div>
+      <div class="d-card">
+        <h4>Chẩn đoán chính</h4>
+        <div class="d-dx">${d.diagnosis}</div>
       </div>
 
-      <div class="drawer-section">
-        <div class="drawer-section-title">Nhân sự phụ trách</div>
-        <div class="drawer-row"><span class="drawer-label">Bác sĩ</span><span class="drawer-val">${d.doctor}</span></div>
-        <div class="drawer-row"><span class="drawer-label">Điều dưỡng</span><span class="drawer-val">${d.nurse}</span></div>
+      <div class="d-card">
+        <h4>Dấu hiệu sinh tồn</h4>
+        <div class="d-vitals">
+          <div class="d-vital ${vClass('hr', d)}"><div class="v-label">Mạch</div><div class="v-value">${d.hr}</div><div class="v-unit">lần/phút</div></div>
+          <div class="d-vital ${vClass('temp', d)}"><div class="v-label">Nhiệt độ</div><div class="v-value">${d.temp}</div><div class="v-unit">°C</div></div>
+          <div class="d-vital ${vClass('spo2', d)}"><div class="v-label">SpO₂</div><div class="v-value">${d.spo2}</div><div class="v-unit">%</div></div>
+          <div class="d-vital ${vClass('bp', d)}"><div class="v-label">Huyết áp</div><div class="v-value" style="font-size:14px">${d.bp_sys}/${d.bp_dia}</div><div class="v-unit">mmHg</div></div>
+        </div>
+      </div>
+
+      <div class="d-card">
+        <h4>Tình trạng xử trí</h4>
+        <div class="d-grid">
+          <div class="d-item"><div class="di-label">Xét nghiệm bất thường</div><div class="di-value" style="color:${(+d.abnormal_labs) ? 'var(--red)' : 'inherit'}">${d.abnormal_labs || 0}</div></div>
+          <div class="d-item"><div class="di-label">Tờ điều trị chưa ký</div><div class="di-value" style="color:${(+d.unsigned_docs) ? 'var(--red)' : 'inherit'}">${d.unsigned_docs || 0}</div></div>
+          <div class="d-item"><div class="di-label">Y lệnh chưa thực hiện</div><div class="di-value" style="color:${(+d.pending_orders) ? '#b07400' : 'inherit'}">${d.pending_orders || 0}</div></div>
+          <div class="d-item"><div class="di-label">Y lệnh phát sinh hôm nay</div><div class="di-value">${d.new_orders_today || 0}</div></div>
+        </div>
+      </div>
+
+      <div class="d-card">
+        <h4>Danh sách y lệnh</h4>
+        <div class="d-list">
+          ${buildOrders(d).map(o => `
+            <div class="d-order">
+              <span class="o-dot" style="background:${o.pending ? 'var(--orange)' : 'var(--green)'}"></span>
+              <div class="o-text">${o.text}<div class="o-time">${o.time}</div></div>
+              <span class="o-tag ${o.pending ? 'tag-pending' : 'tag-done'}">${o.pending ? 'Chưa TH' : 'Đã TH'}</span>
+            </div>`).join('')}
+        </div>
       </div>
     `;
   }
 
-  document.getElementById('drawerBody').innerHTML = body;
   document.getElementById('drawerOverlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
 }
